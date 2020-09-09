@@ -1,11 +1,11 @@
-# EC2 Bastion Terraform Module
+# Cloudfront Distribution Terraform Module
 
 This Terraform Module handles the creation of Cloudfront Distribution, Cloudfront Log bucket, and if required origin-access-identity's for S3 Origins.
 
 ## Usage
 ```hcl-terraform
-module "guild_cloudfront_distribution" {
-  source = "git@github.com:eonx-com/eonx-ops-terraform-modules.git?ref=cloudfront_distribution_1.0"
+module "cloudfront_distribution" {
+  source = "git@github.com:eonx-com/TerraFlops/aws-cloudfront-distribution?ref=v1.0"
 
   # Base settings for cloudfront dist
   domain_name = local.domain_name
@@ -16,13 +16,13 @@ module "guild_cloudfront_distribution" {
   description = "Guild CloudFront"
 
   # Logging
-  log_bucket_identifier = "guild"
-  logs_prefix = "guild"
+  log_bucket_identifier = "Website"
+  logs_prefix = "Website"
 
   # Custom Aliases
   # Removed alias until we are ready to migrate
   aliases = [
-    "guild.test.ewallet.com.au"
+    "xxxxxxxx"
   ]
   
   # Custom Error Responses
@@ -42,7 +42,7 @@ module "guild_cloudfront_distribution" {
   # Custom Origins
   domain_origins = {
     APIELBOrigin = {
-      domain_name = "rewardste-elasticl-109i4ri873f5y-1843496252.ap-southeast-2.elb.amazonaws.com"
+      domain_name = "xxxxxxxx.ap-southeast-2.elb.amazonaws.com"
       origin_keepalive_timeout = 5
       origin_read_timeout = 30
       custom_headers = {
@@ -55,7 +55,7 @@ module "guild_cloudfront_distribution" {
   # S3 Origins
   s3_origins = {
     S3StorageBucketOrigin = {
-      domain_name = "guild.${local.domain_name}.s3.us-east-1.amazonaws.com"
+      domain_name = "website.${local.domain_name}.s3.us-east-1.amazonaws.com"
       custom_headers = {
         "X-EonX-Secure" = "TRUE"
       }
@@ -64,7 +64,7 @@ module "guild_cloudfront_distribution" {
 
   # ACM Certificates
   acm_certificate = {
-    acm_certificate_arn = "arn:aws:acm:us-east-1:413021117787:certificate/f5ef0391-d9a2-4fb3-82d5-27d83f65605b"
+    acm_certificate_arn = "arn:aws:acm:us-east-1:xxxxxxxx:certificate/xxxxxxxx"
     minimum_protocol_version = "TLSv1.2_2018"
     ssl_support_method = "sni-only"
   }
