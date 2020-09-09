@@ -5,7 +5,7 @@ This Terraform Module handles the creation of Cloudfront Distribution, Cloudfron
 ## Usage
 ```hcl-terraform
 module "cloudfront_distribution" {
-  source = "git@github.com:eonx-com/TerraFlops/aws-cloudfront-distribution?ref=v1.0"
+  source = "git@github.com:eonx-com/TerraFlops/aws-cloudfront-distribution?ref=v2.0"
 
   # Base settings for cloudfront dist
   domain_name = local.domain_name
