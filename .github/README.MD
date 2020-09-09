@@ -1,14 +1,14 @@
 # Terraflops Terraform Module
  
-### Module name
+### AWS CloudFront Distribution
 
-Insert module description
+This module can be used to create an AWS CloudFront distribution
 
 #### Example usage
 
 ```hcl-terraform
 module "example" {
-  source = "git::https://github.com/TerraFlops/module-name?ref=v1.0"
+  source = "git::https://github.com/TerraFlops/aws-cloudfront-distributioon?ref=v1.0"
   ...
 }
 ```
