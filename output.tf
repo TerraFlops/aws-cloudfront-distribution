@@ -1,1 +1,3 @@
-# Insert output values here, if no outputs are defined delete this file
+output "cloudfront_domain_name" {
+  value = aws_cloudfront_distribution.cloudfront_distribution.domain_name
+}
