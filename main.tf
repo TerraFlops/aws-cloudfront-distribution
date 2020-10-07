@@ -45,7 +45,8 @@ resource "aws_cloudfront_distribution" "cloudfront_distribution" {
   price_class = var.price_class
   http_version = var.http_version
   aliases = length(var.aliases) > 0 ? var.aliases : null
-
+  web_acl_id = var.web_acl_id
+  
   dynamic "viewer_certificate" {
     for_each = tomap({
       for key, certificate in { acm = var.acm_certificate }: key => certificate
