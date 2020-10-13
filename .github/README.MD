@@ -1,8 +1,10 @@
-# Cloudfront Distribution Terraform Module
+# Terraflops Terraform Module
+ 
+### AWS CloudFront Distribution
 
-This Terraform Module handles the creation of Cloudfront Distribution, Cloudfront Log bucket, and if required origin-access-identity's for S3 Origins.
+Creates an Amazon CloudFront web distribution.
 
-## Usage
+#### Example usage
 ```hcl-terraform
 module "example" {
   source = "git::https://github.com/TerraFlops/aws-cloudfront-distribution?ref=v2.1"
