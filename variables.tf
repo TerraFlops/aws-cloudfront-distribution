@@ -4,7 +4,7 @@ variable "s3_origins" {
     custom_headers = map(string)
     origin_access_identity = string
   }))
-  description = "Map of S3 origins"
+  description = "Map of S3 origin objects"
   default = {}
 }
 
@@ -19,7 +19,7 @@ variable "domain_origins" {
     origin_protocol_policy = string
     origin_ssl_protocols = string
   }))
-  description = "Map of Domain Name origins"
+  description = "Map of Domain Name origins objects"
   default = {}
 }
 
@@ -50,6 +50,7 @@ variable "iam_certificate" {
     iam_certificate_id = string
   })
   default = null
+  description = "Object of IAM Certificate configuration"
 }
 
 variable "acm_certificate" {
@@ -59,6 +60,7 @@ variable "acm_certificate" {
     acm_certificate_arn = string
   })
   default = null
+  description = "Object of ACM Certificate configuration"
 }
 
 variable "default_cache_behavior" {
@@ -85,7 +87,7 @@ variable "custom_error_responses" {
     response_code = number
     response_page_path = string
   }))
-  description = "Custom Error Response map"
+  description = "Map of custom error response objects, with the key as the response code"
 }
 
 variable "enabled" {

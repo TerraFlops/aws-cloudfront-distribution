@@ -4,36 +4,26 @@ This Terraform Module handles the creation of Cloudfront Distribution, Cloudfron
 
 ## Usage
 ```hcl-terraform
-module "cloudfront_distribution" {
-  source = "git@github.com:eonx-com/TerraFlops/aws-cloudfront-distribution?ref=v2.0"
+module "example" {
+  source = "git::https://github.com/TerraFlops/aws-cloudfront-distribution?ref=v2.1"
 
-  # Base settings for cloudfront dist
-  domain_name = local.domain_name
-  enabled = false
-  default_root_object = "index.html"
+  enabled = var.enabled
+  default_root_object = ""
   price_class = "PriceClass_All"
   cloudfront_geo_restriction_type = "none"
-  description = "Guild CloudFront"
+  description = "Example CloudFront"
+  web_acl_id = var.web_acl_id
 
   # Logging
-  log_bucket_identifier = "Website"
-  logs_prefix = "Website"
+  logs_bucket_name = "logs-bucket.s3.amazonaws.com"
+  logs_prefix = "example"
 
   # Custom Aliases
-  # Removed alias until we are ready to migrate
-  aliases = [
-    "xxxxxxxx"
-  ]
-  
-  # Custom Error Responses
+  aliases = var.disable_aliases == true ? [] : local.aliases
+
   custom_error_responses = {
-    403 = {
-      error_caching_min_ttl = 0,
-      response_code = 200
-      response_page_path = "/index.html"
-    }
     404 = {
-      error_caching_min_ttl = 0,
+      error_caching_min_ttl = 0
       response_code = 200
       response_page_path = "/index.html"
     }
@@ -41,91 +31,146 @@ module "cloudfront_distribution" {
 
   # Custom Origins
   domain_origins = {
-    APIELBOrigin = {
-      domain_name = "xxxxxxxx.ap-southeast-2.elb.amazonaws.com"
+    api = {
+      domain_name = "api.example.com.au"
       origin_keepalive_timeout = 5
       origin_read_timeout = 30
+      http_port = 80
+      https_port = 443
+      origin_protocol_policy = "https-only"
+      origin_ssl_protocols = "TLSv1.2"
       custom_headers = {
         "X-EonX-Secure" = "TRUE"
-
+      }
+    }
+    frontend = {
+      domain_name = "example.frontend.s3-website-ap-southeast-2.amazonaws.com"
+      origin_keepalive_timeout = 5
+      origin_read_timeout = 30
+      http_port = 80
+      https_port = 443
+      origin_protocol_policy = "http-only"
+      origin_ssl_protocols = "TLSv1.2"
+      custom_headers = {
+        "X-EonX-Secure" = "TRUE"
       }
     }
   }
 
-  # S3 Origins
   s3_origins = {
-    S3StorageBucketOrigin = {
-      domain_name = "website.${local.domain_name}.s3.us-east-1.amazonaws.com"
-      custom_headers = {
-        "X-EonX-Secure" = "TRUE"
-      }
+    ssl_verification = {
+      domain_name = "ssl-verification.s3.amazonaws.com"
+      custom_headers = {}
+      origin_access_identity = ""
     }
   }
 
-  # ACM Certificates
-  acm_certificate = {
-    acm_certificate_arn = "arn:aws:acm:us-east-1:xxxxxxxx:certificate/xxxxxxxx"
-    minimum_protocol_version = "TLSv1.2_2018"
-    ssl_support_method = "sni-only"
-  }
+  # Certificates
+  acm_certificate = var.certificate_type == "ACM" ? local.acm_certificates : null
+  iam_certificate = var.certificate_type == "IAM" ? local.iam_certificates : null
 
   # Default Cache Behaviors
   default_cache_behavior = {
-    allowed_methods = "get_head_options"
-    cached_methods = "get_head",
-    target_origin_id = "S3StorageBucketOrigin"
+    allowed_methods = "get_head"
+    cached_methods = "get_head"
+    target_origin_id = "frontend"
     forwarded_value_query_string = false
     forwarded_value_cookies = "none"
-    forwarded_value_headers = false
+    forwarded_value_headers = "none"
     viewer_protocol_policy = "redirect-to-https"
-    default_ttl = 600
-    max_ttl = 800
+    max_ttl = 900
+    min_ttl = 900
+    default_ttl = 900
+    compress = false
+    lambda_function = var.enable_lambdas == true ? local.lambda_functions : {}
   }
 
   # Ordered Cache Behaviors
   cache_behaviors = [
     {
       path_pattern = "/index.html"
-      allowed_methods = "get_head_options"
+      allowed_methods = "get_head"
       cached_methods = "get_head"
-      target_origin_id = "S3StorageBucketOrigin"
+      target_origin_id = "frontend"
       viewer_protocol_policy = "redirect-to-https"
+      forwarded_value_headers = "none"
       forwarded_value_cookies = "none"
+      forwarded_value_query_string = false
+      min_ttl = 0
+      max_ttl = 0
+      default_ttl = 0
+      compress = true
+      smooth_streaming = false
+      lambda_function = {}
     },
     {
-      path_pattern = "/login"
-      allowed_methods = "get_head_options"
+      path_pattern = "/1.0/provider*"
+      allowed_methods = "get_head"
       cached_methods = "get_head"
-      target_origin_id = "APIELBOrigin"
+      target_origin_id = "api"
       viewer_protocol_policy = "redirect-to-https"
-      forwarded_value_headers = "*"
+      forwarded_value_cookies = "none"
+      forwarded_value_headers = "Host"
+      forwarded_value_query_string = true
+      min_ttl = 300
+      max_ttl = 300
+      default_ttl = 300
+      compress = true
+      smooth_streaming = false
+      lambda_function = {}
     }
   ]
+
+  tags = {
+    Version = "Example"
+    Client = var.client_name
+  }
 }
 ```
+## Requirements
+
+No requirements.
+
+## Providers
+
+| Name | Version |
+|------|---------|
+| aws | n/a |
+
+## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|:----:|:-------:|:--------:|
-| s3_origins | Map of S3 origins | object(bucket_name, custom_headers) | {} | no |
-| domain_origins | Map of Domain Name origins | object(domain_name, custom_headers) | {} | no |
-| iam_certificate | Map of IAM Certificate | object(ssl_support_method, minimum_protocol_version, iam_certificate_id) | null | no |
-| acm_certificate | Map of ACM Certificate | object(ssl_support_method, minimum_protocol_version, acm_certificate_id) | null | no |
-| default_cache_behavior | The default cache behavior for this distribution (maximum one). | object(path_pattern, allowed_methods, cached_methods, target_origin_id) |  | yes |
-| cache_behaviors | An ordered list of cache behaviors resource for this distribution. List from top to bottom in order of precedence. The topmost cache behavior will have precedence 0. | object(allowed_methods, cached_methods, target_origin_id, viewer_protocol_policy, forwarded_value_query_string) |  | yes |
-| custom_error_responses | Custom Error Response map | object(error_caching_min_ttl, response_code, response_page_path) |  | yes |
-| domain_name | The domain name for the project | string |  | yes |
-| log_bucket_identifier | Identifier used in the log bucket name | string |  | yes |
-| enabled | Flag to enable/disable the distribution | bool | true  | no |
-| is_ipv6_enabled | Flag to enable/disable IPv6 support | bool | false  | no |
-| description | Description of the CloudFront distribution | string |   | yes |
-| price_class | CloudFront price class | string | PriceClass_All  | no |
-| http_version | HTTP version for distribution. | string | http2  | no |
-| aliases | Optional set of CNAME aliases to assign to the distribution | set(string) | []  | no |
-| ssl_support_method | Distribution SSL support level | string | TLSv1.2_2018  | no |
-| minimum_protocol_version | Minimum protocol version. | string | sni-only  | no |
-| default_root_object | Default root object for the distribution | string |   | yes |
-| allowed_methods | Allowed HTTP methods CloudFront processes and forwards. Allowed values are get_head, get_head_options, or all | string | all  | no |
-| cached_methods | CloudFront caches the response to requests using the specified HTTP methods. Allowed values, get_head or get_head_options. | string | get_head | no |
-| logs_include_cookies | Specifies whether you want CloudFront to include cookies in access logs. | bool | false | no |
-| logs_prefix | String that you want CloudFront to prefix to the access log filenames for this distribution, for example, myprefix/| string |  | yes |
-| cloudfront_geo_restriction_type | The restriction configuration for this distribution (maximum one) | string | none | no |
+|------|-------------|------|---------|:--------:|
+| acm\_certificate | Object of ACM Certificate configuration | <pre>object({<br>    ssl_support_method = string<br>    minimum_protocol_version = string<br>    acm_certificate_arn = string<br>  })</pre> | `null` | no |
+| aliases | Optional set of CNAME aliases to assign to the distribution | `set(string)` | `[]` | no |
+| allowed\_methods | Allowed HTTP methods CloudFront processes and forwards. Allowed values are get\_head, get\_head\_options, or all. Defaults to all | `string` | `"all"` | no |
+| cache\_behaviors | An ordered list of cache behaviors resource for this distribution. List from top to bottom in order of precedence. The topmost cache behavior will have precedence 0. | <pre>list(object({<br>    path_pattern = string<br>    allowed_methods = string<br>    cached_methods = string<br>    target_origin_id = string<br>    min_ttl = number<br>    max_ttl = number<br>    default_ttl = number<br>    compress = bool<br>    smooth_streaming = bool<br>    viewer_protocol_policy = string<br>    forwarded_value_query_string = string<br>    forwarded_value_headers = string<br>    forwarded_value_cookies = string<br>    lambda_function = map(map(string))<br>  }))</pre> | n/a | yes |
+| cached\_methods | CloudFront caches the response to requests using the specified HTTP methods. Allowed values, get\_head or get\_head\_options. Defaults to get\_head | `string` | `"get_head"` | no |
+| cloudfront\_geo\_restriction\_type | The restriction configuration for this distribution (maximum one). Defaults to none | `string` | `"none"` | no |
+| custom\_error\_responses | Map of custom error response objects, with the key as the response code | <pre>map(object({<br>    error_caching_min_ttl = number<br>    response_code = number<br>    response_page_path = string<br>  }))</pre> | n/a | yes |
+| default\_cache\_behavior | The default cache behavior for this distribution (maximum one). | <pre>object({<br>    allowed_methods = string<br>    cached_methods = string<br>    target_origin_id = string<br>    min_ttl = number<br>    max_ttl = number<br>    default_ttl = number<br>    compress = bool<br>    viewer_protocol_policy = string<br>    forwarded_value_query_string = string<br>    forwarded_value_cookies = string<br>    forwarded_value_headers = string<br>    lambda_function = map(map(string))<br>  })</pre> | n/a | yes |
+| default\_root\_object | Default root object for the distribution | `string` | n/a | yes |
+| description | Description of the CloudFront distribution | `string` | n/a | yes |
+| domain\_origins | Map of Domain Name origins objects | <pre>map(object({<br>    domain_name = string<br>    custom_headers = map(string)<br>    http_port = number<br>    https_port = number<br>    origin_keepalive_timeout = number<br>    origin_read_timeout = number<br>    origin_protocol_policy = string<br>    origin_ssl_protocols = string<br>  }))</pre> | `{}` | no |
+| enabled | Flag to enable/disable the distribution. Defaults to true | `bool` | `true` | no |
+| http\_version | HTTP version for distribution. Defaults to http2 | `string` | `"http2"` | no |
+| iam\_certificate | Object of IAM Certificate configuration | <pre>object({<br>    ssl_support_method = string<br>    minimum_protocol_version = string<br>    iam_certificate_id = string<br>  })</pre> | `null` | no |
+| is\_ipv6\_enabled | Flag to enable/disable IPv6 support. Defaults to false | `bool` | `false` | no |
+| logs\_bucket\_name | Name of the cloudfront bucket to place logs in | `string` | n/a | yes |
+| logs\_include\_cookies | Specifies whether you want CloudFront to include cookies in access logs. Defaults to false | `bool` | `false` | no |
+| logs\_prefix | String that you want CloudFront to prefix to the access log filenames for this distribution, for example, myprefix/. Defaults to empty | `string` | `""` | no |
+| minimum\_protocol\_version | Minimum protocol version. Defaults to sni-only | `string` | `"sni-only"` | no |
+| price\_class | CloudFront price class. Defaults to PriceClass\_All | `string` | `"PriceClass_All"` | no |
+| s3\_origins | Map of S3 origin objects | <pre>map(object({<br>    domain_name = string<br>    custom_headers = map(string)<br>    origin_access_identity = string<br>  }))</pre> | `{}` | no |
+| ssl\_support\_method | Distribution SSL support level. Defaults to TLSv1.2\_2018 | `string` | `"TLSv1.2_2018"` | no |
+| tags | Map of key value pairs to add to the distribution as tags. Defaults to none | `map(string)` | `{}` | no |
+| web\_acl\_id | If you're using AWS WAF to filter CloudFront requests, the Id of the AWS WAF web ACL that is associated with the distribution. The WAF Web ACL must exist in the WAF Global (CloudFront) region and the credentials configuring this argument must have waf:GetWebACL permissions assigned. If using WAFv2, provide the ARN of the web ACL. | `string` | `null` | no |
+
+## Outputs
+
+| Name | Description |
+|------|-------------|
+| arn | The ARN (Amazon Resource Name) for the distribution. For example: arn:aws:cloudfront::123456789012:distribution/EDFDVBD632BHDS5 |
+| domain\_name | The domain name corresponding to the distribution. For example: d604721fxaaqy9.cloudfront.net. |
+| id | The identifier for the distribution. For example: EDFDVBD632BHDS5. |
+
