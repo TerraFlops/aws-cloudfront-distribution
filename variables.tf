@@ -2,7 +2,6 @@ variable "s3_origins" {
   type = map(object({
     domain_name = string
     custom_headers = map(string)
-    origin_access_identity = string
   }))
   description = "Map of S3 origins"
   default = {}
