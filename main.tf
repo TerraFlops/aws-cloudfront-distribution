@@ -98,10 +98,6 @@ resource "aws_cloudfront_distribution" "cloudfront_distribution" {
           value = custom_header.value
         }
       }
-
-      s3_origin_config {
-        origin_access_identity = s3_origin.value["origin_access_identity"] != "" ? s3_origin.value["origin_access_identity"] : null
-      }
     }
   }
 
