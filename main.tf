@@ -33,10 +33,6 @@ locals {
   }
 }
 
-resource "aws_cloudfront_origin_access_identity" "origin_access_identity" {
-  comment = "Terraform issue 7930 workaround"
-}
-
 resource "aws_cloudfront_distribution" "cloudfront_distribution" {
   enabled = var.enabled
   is_ipv6_enabled = var.is_ipv6_enabled
@@ -46,7 +42,7 @@ resource "aws_cloudfront_distribution" "cloudfront_distribution" {
   http_version = var.http_version
   aliases = length(var.aliases) > 0 ? var.aliases : null
   web_acl_id = var.web_acl_id
-  
+
   dynamic "viewer_certificate" {
     for_each = tomap({
       for key, certificate in { acm = var.acm_certificate }: key => certificate
@@ -104,7 +100,7 @@ resource "aws_cloudfront_distribution" "cloudfront_distribution" {
       }
 
       s3_origin_config {
-        origin_access_identity = s3_origin.value["origin_access_identity"] != "" ? s3_origin.value["origin_access_identity"] : aws_cloudfront_origin_access_identity.origin_access_identity.cloudfront_access_identity_path
+        origin_access_identity = s3_origin.value["origin_access_identity"] != "" ? s3_origin.value["origin_access_identity"] : null
       }
     }
   }
