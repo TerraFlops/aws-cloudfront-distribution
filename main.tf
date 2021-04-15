@@ -45,6 +45,16 @@ resource "aws_cloudfront_distribution" "cloudfront_distribution" {
 
   dynamic "viewer_certificate" {
     for_each = tomap({
+      for key, certificate in { key = "dummy_value" }: key => certificate
+        if var.acm_certificate == null && var.iam_certificate == null
+    })
+    content {
+      cloudfront_default_certificate = true
+    }
+  }
+
+  dynamic "viewer_certificate" {
+    for_each = tomap({
       for key, certificate in { acm = var.acm_certificate }: key => certificate
         if var.acm_certificate != null && var.iam_certificate == null
     })
