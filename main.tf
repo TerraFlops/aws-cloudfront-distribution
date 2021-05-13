@@ -96,9 +96,18 @@ resource "aws_cloudfront_distribution" "cloudfront_distribution" {
     iterator = s3_origin
 
     content {
-      origin_path = ""
+      origin_path = lookup(s3_origin.value, "origin_path", null)
       domain_name = s3_origin.value["domain_name"]
       origin_id = s3_origin.key
+
+      dynamic "s3_origin_config" {
+        for_each = lookup(s3_origin.value, "origin_access_identity", null) == null ? {} : {
+          origin_access_identity = s3_origin.value["origin_access_identity"]
+        }
+        content {
+          origin_access_identity = lookup(s3_origin.value, "origin_access_identity", null)
+        }
+      }
 
       dynamic "custom_header" {
         for_each = s3_origin.value["custom_headers"]
@@ -117,7 +126,7 @@ resource "aws_cloudfront_distribution" "cloudfront_distribution" {
     iterator = domain_origin
 
     content {
-      origin_path = ""
+      origin_path = lookup(domain_origin.value, "origin_path", null)
       domain_name = domain_origin.value["domain_name"]
       origin_id = domain_origin.key
 
