@@ -2,6 +2,7 @@ variable "s3_origins" {
   type = map(object({
     domain_name = string
     custom_headers = map(string)
+    origin_access_identity = any
   }))
   description = "Map of S3 origins"
   default = {}
@@ -42,13 +43,9 @@ variable "cache_behaviors" {
   description = "An ordered list of cache behaviors resource for this distribution. List from top to bottom in order of precedence. The topmost cache behavior will have precedence 0."
 }
 
-variable "iam_certificate" {
-  type = object({
-    ssl_support_method = string
-    minimum_protocol_version = string
-    iam_certificate_id = string
-  })
-  default = null
+variable "cloudfront_default_certificate" {
+  type = bool
+  default = false
 }
 
 variable "acm_certificate" {

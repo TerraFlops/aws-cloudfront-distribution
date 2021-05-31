@@ -43,40 +43,11 @@ resource "aws_cloudfront_distribution" "cloudfront_distribution" {
   aliases = length(var.aliases) > 0 ? var.aliases : null
   web_acl_id = var.web_acl_id
 
-  dynamic "viewer_certificate" {
-    for_each = tomap({
-      for key, certificate in { key = "dummy_value" }: key => certificate
-        if var.acm_certificate == null && var.iam_certificate == null
-    })
-    content {
-      cloudfront_default_certificate = true
-    }
-  }
-
-  dynamic "viewer_certificate" {
-    for_each = tomap({
-      for key, certificate in { acm = var.acm_certificate }: key => certificate
-        if var.acm_certificate != null && var.iam_certificate == null
-    })
-    content {
-      cloudfront_default_certificate = false
-      ssl_support_method = viewer_certificate.value["ssl_support_method"]
-      minimum_protocol_version = viewer_certificate.value["minimum_protocol_version"]
-      acm_certificate_arn = viewer_certificate.value["acm_certificate_arn"]
-    }
-  }
-
-  dynamic "viewer_certificate" {
-    for_each = tomap({
-      for key, certificate in { iam = var.iam_certificate }: key => certificate
-        if var.acm_certificate == null && var.iam_certificate != null
-    })
-    content {
-      cloudfront_default_certificate = false
-      ssl_support_method = viewer_certificate.value["ssl_support_method"]
-      minimum_protocol_version = viewer_certificate.value["minimum_protocol_version"]
-      iam_certificate_id = viewer_certificate.value["iam_certificate_id"]
-    }
+  viewer_certificate {
+    cloudfront_default_certificate = var.cloudfront_default_certificate
+    ssl_support_method = var.cloudfront_default_certificate == true ? null : var.acm_certificate["ssl_support_method"]
+    minimum_protocol_version = var.cloudfront_default_certificate == true ? null : var.acm_certificate["minimum_protocol_version"]
+    acm_certificate_arn = var.cloudfront_default_certificate == true ? null : var.acm_certificate["acm_certificate_arn"]
   }
 
   dynamic "custom_error_response" {
