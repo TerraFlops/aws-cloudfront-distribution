@@ -55,9 +55,9 @@ resource "aws_cloudfront_distribution" "cloudfront_distribution" {
 
     content {
       error_code = custom_error_response.key
-      error_caching_min_ttl = custom_error_response.value["error_caching_min_ttl"]
-      response_code = custom_error_response.value["response_code"]
-      response_page_path = custom_error_response.value["response_page_path"]
+      error_caching_min_ttl = lookup(custom_error_response.value, "error_caching_min_ttl", null)
+      response_code = lookup(custom_error_response.value, "response_code", null)
+      response_page_path = lookup(custom_error_response.value, "response_page_path", null)
     }
   }
 
