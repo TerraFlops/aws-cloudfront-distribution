@@ -76,9 +76,7 @@ variable "default_cache_behavior" {
 }
 
 variable "custom_error_responses" {
-  type = map(object({
-    error_caching_min_ttl = number
-  }))
+  type = map(any)
   description = "Custom Error Response map"
 }
 
