@@ -79,7 +79,7 @@ resource "aws_cloudfront_distribution" "cloudfront_distribution" {
           origin_access_identity = lookup(s3_origin.value, "origin_access_identity", null)
         }
       }
-
+7
       dynamic "custom_header" {
         for_each = s3_origin.value["custom_headers"]
 
@@ -152,9 +152,9 @@ resource "aws_cloudfront_distribution" "cloudfront_distribution" {
       }
     }
 
-    min_ttl = var.default_cache_behavior["min_ttl"]
-    default_ttl = var.default_cache_behavior["default_ttl"]
-    max_ttl = var.default_cache_behavior["max_ttl"]
+    min_ttl = lookup(var.default_cache_behavior, "min_ttl", null)
+    default_ttl = lookup(var.default_cache_behavior, "default_ttl", null)
+    max_ttl = lookup(var.default_cache_behavior, "max_ttl", null)
     compress = var.default_cache_behavior["compress"]
     viewer_protocol_policy = var.default_cache_behavior["viewer_protocol_policy"]
   }
