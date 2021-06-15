@@ -79,7 +79,6 @@ resource "aws_cloudfront_distribution" "cloudfront_distribution" {
           origin_access_identity = lookup(s3_origin.value, "origin_access_identity", null)
         }
       }
-7
       dynamic "custom_header" {
         for_each = s3_origin.value["custom_headers"]
 
