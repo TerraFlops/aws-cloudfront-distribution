@@ -62,9 +62,6 @@ variable "default_cache_behavior" {
     allowed_methods = string
     cached_methods = string
     target_origin_id = string
-    min_ttl = number
-    max_ttl = number
-    default_ttl = number
     compress = bool
     viewer_protocol_policy = string
     forwarded_value_query_string = string
