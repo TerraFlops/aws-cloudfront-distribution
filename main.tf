@@ -188,9 +188,9 @@ resource "aws_cloudfront_distribution" "cloudfront_distribution" {
         }
       }
 
-      min_ttl = behavior.value["min_ttl"]
-      default_ttl = behavior.value["default_ttl"]
-      max_ttl = behavior.value["max_ttl"]
+      min_ttl = lookup(behavior.value, "min_ttl", null)
+      default_ttl = lookup(behavior.value, "default_ttl", null)
+      max_ttl = lookup(behavior.value, "max_ttl", null)
       compress = behavior.value["compress"]
       smooth_streaming = behavior.value["smooth_streaming"]
       viewer_protocol_policy = behavior.value["viewer_protocol_policy"]
